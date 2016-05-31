@@ -54,16 +54,17 @@ immutable GasData
     δ600 = 0.08
     λ = 1e5
     Ψ(z) = -6.9*z/λ
-    @show uτ = κ*uref/(log((href+z0)/z0) - Ψ(href))
+    uτ = κ*uref/(log((href+z0)/z0) - Ψ(href))
     zvals = collect(0.:0.25:40.)
     fit = curve_fit((z,p) -> uref*(z/href).^p[1], zvals, Float64[uτ/κ*(log((z+z0)/z0) - Ψ(z)) for z in zvals], Float64[1/(1+10*z/href) for z in zvals], [1.])
-    #fit.param[end] = 0.22664
 
     const P = 101325. # pressure (Pa)
     const R = 8314.3 # gas constant (J/(kmol*K))
     const ma = 28.95 # Molecular mass of air (kg / kmol)
 
-    new(uref, href, z0, mdp, E, δ600, uτ, fit.param[end], 1+fit.param[end], ma, P*ma/(R*Tg), R*Tg/P, λ)
+    ρa = P*ma/(R*Tg)
+
+    new(uref, href, z0, mdp, E, δ600, uτ, fit.param[end], 1+fit.param[end], ma, ρa, ma/ρa, λ)
   end
 end
 
@@ -121,22 +122,35 @@ function dispersion(dx::Float64, xend::Float64, Meff0::Float64, Beff0::Float64, 
       b = 0.
     end
 
-    b_arr[i+1] = b
-    Meff_arr[i+1] = Meff + dx*(2*Beff*ue/V0)
-
-    if !gravity_collapsed && ((Beff/Heff) / sqrt(Ri*(1+0.8*Ris)) >= 8/(3*κ))
+    if !gravity_collapsed && ((Beff/Heff) / sqrt(Ri*(1+0.8*(Ris))) >= 8/(3*κ))
       gravity_collapsed = true
     end
+
+    b_arr[i+1] = b
+    if gravity_collapsed
+      Meff_arr[i+1] = Meff/(2*Beff) + dx*(ue/V0)
+    else
+      Meff_arr[i+1] = Meff + dx*(2*Beff*ue/V0)
+    end
+
+    ke(S::Float64) = 2*δ^2/γ*(1/S-1/S^2)
+
     Beff_pr = 0.
     if b > 0 && Ris > 0
-      Beff_pr = gravity_collapsed ? d.uτ/ueff * Ri*sqrt(1+0.8*Ris)/(3*κ*5) * (Heff/Beff) : CE * d.uτ*sqrt(Ri)/ueff
+      if gravity_collapsed
+        S = 1 + sqrt(1+8*(δ/(γ*Sy))^2)
+        Beff_arr[i+1] = sqrt(π*ke(S)*dx + Beff^2)
+        Meff_arr[i+1] *= 2*Beff_arr[i+1]
+      else
+        Beff_pr = CE * d.uτ*sqrt(Ri)/ueff
+        Beff_arr[i+1] = Beff + dx*Beff_pr
+      end
+    else
+      Beff_arr[i+1] = Beff
     end
-    Beff_arr[i+1] = Beff + dx*Beff_pr
 
-    σy = sqrt(2/pi)*Beff
-    xe = σy*(γ*σy + sqrt(4*δ^2 + γ^2*σy^2))/(2*δ^2)
-    ke = σy*(δ/sqrt(1+γ*xe) - 0.5*δ*xe*γ*(1+γ*xe)^(-3/2))
-    Sy_arr[i+1] = b > 0 ? sqrt(4*ke*dx + Sy^2) : sqrt(2)*δ*(x+xv)/sqrt(1+γ*(x+xv))
+    S = 1 + sqrt(1+2*π*(δ/(γ*Beff))^2)
+    Sy_arr[i+1] = b > 0 ? sqrt(4*ke(S)*dx + Sy^2) : sqrt(2)*δ*(x+xv)/sqrt(1+γ*(x+xv))
   end
 
   Heff_arr[end] = Heff_arr[end-1]
