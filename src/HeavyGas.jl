@@ -158,6 +158,59 @@ function dispersion(dx::Float64, xend::Float64, Meff0::Float64, Beff0::Float64, 
   return 0.:dx:xend, Meff_arr, Beff_arr, Sy_arr, d.E./(d.mdp*Meff_arr), b_arr, Heff_arr
 end
 
-export GasData, dispersion
+function instantaneous(r0::Number, h0::Number, c0::Number, dt::Float64, d::GasData)
+  r::Float64 = r0
+  h::Float64 = h0
+  c::Float64 = c0
+  V = π*r^2*h
+  t = 0.
+  ub = 0.
+  x = 0.
+
+  const Mdp = V*c0/d.Vm
+  const αe = 0.85
+  const ts = 1.75#3.6#0.83
+
+  function ρ(V::Float64)
+    c = Mdp*d.Vm / V
+    ca = d.mdp*c/d.Vm
+    return ca + (1-c)*d.ma / d.Vm
+  end
+
+  Ris_i = 1e30
+
+  @show const delay_t = ts / sqrt((g*(ρ(V)-d.ρa)/d.ρa) / V^(1/3))
+
+  Ris_i = 100.
+  while Ris_i > 10.# && t < 2.8
+    m = ρ(V)*V
+    mv = ub*m
+    if t % 0.1 < dt
+      println("t: ", round(t,2), " r: ", r, " h: ", h, " ρm/ρa: ", ρ(V)/d.ρa, " c: ", c, " Ris_i: ", Ris_i, " x: ", x)
+    end
+    gp = g*(ρ(V) - d.ρa)/d.ρa
+    uf = 1.15*sqrt(gp*h)
+    r += dt * uf
+
+    ue = αe*uf
+    Ris = gp*h/d.uτ^2
+    int_u = d.uτ/κ*(h*log((h + d.z0)/d.z0) - h - d.z0*log(d.z0) + d.z0*log(h + d.z0))
+    int_u / h
+    ua = (0.8 + 0.2/(1+Ris))/h * int_u
+    usi = κ*ub/(log(h/d.z0)-1)
+    Ris_i = usi == 0 ? 1e30 : gp*h/usi^2
+    ϕ = sqrt(1+0.8*Ris_i)
+    ut = κ*usi/ϕ
+    dV = t > delay_t ? dt*(2*π*r*h*ue + π*r^2*ut) : 0.
+    V += dV
+    ub = (mv + dV*d.ρa*ua) / (m + dV*d.ρa)
+    h = V / (π*r^2)
+    t += dt
+    x += ub*dt
+  end
+  println("uτ: $(d.uτ)")
+end
+
+export GasData, dispersion, instantaneous
 
 end # module

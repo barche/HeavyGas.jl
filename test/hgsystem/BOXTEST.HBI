@@ -1,0 +1,51 @@
+* ==============  HEGABOX standard input file (no HF) ====================      
+*                 (fluid properties of PROPANE)                                 
+                                                                                
+TITLE   HEGABOX standard input file (no HF)                                     
+                                                                                
+SPILL                      *  --------> DATA BLOCK: SPILL DATA                  
+                           *                                                    
+   SPILLTOT=  1162.48      * kg         Size of spill (excluding water pickup)  
+                           *            in kg of wet pollutant                  
+   RSTART  =  7.0          * m          Pool radius at start                    
+                                                                                
+AMBIENT                    *  --------> DATA BLOCK: AMBIENT CONDITIONS          
+                           *                                                    
+   Z0      =  10.0         * m          Height at which U0 is given             
+   U0      =  6.4          * m/s        Wind speed at height z = Z0             
+   AIRTEMP =  20.0         * C          Air temperature at height z = ZAIRTEMP  
+   ZAIRTEMP=  10.0         * m          Height at which AIRTEMP is given        
+   RHPERC  =  0.0         * %          Relative humidity of ambient air         
+   TGROUND =  20.0         * C          Earth's surface temperature             
+                           *                                                    
+DISP                       *  --------> DATA BLOCK: DISPERSION DATA             
+                           *                                                    
+   ZR      =  0.003        * m          Surface roughness                       
+   PQSTAB  =  D            *            Pasquill stability class                
+  *MONIN   =               * m          Monin-Obukov length, use only to        
+                           *            override value HEGABOX calculates       
+                           *                                                    
+GASDATA                    *  ---------> DATA BLOCK: GAS DATA                   
+                           *                                                    
+   THERMOD =  1            *            Thermodynamic model (1=normal, 2=HF)    
+   TGAS    =  20.0         * C          Initial wet pollutant temperature       
+                           *            (before dilution with ambient air)      
+   WATERPOL=  0.0          * -          Molar fraction water in wet pollutant   
+                           *            (mole water/mole wet pollutant)         
+   MWGAS   =  44.10        * kg/kmole   Molecular mass of dry polluant          
+   CPGAS   =  72.947       * J/mole/K   Specific heat of dry pollutant          
+   DIFFDT2 = 6.7213E-11    * m2/s/K2    Thermal diffusivity (scaled by T**2)    
+                           *            (dry pollutant)                         
+   VISCDT2 = 5.1686E-11    * m2/s/K2    Kinematic viscosity (scaled by T**2)    
+                           *            (dry pollutant)                         
+   WPICKUP =  0.0          * -          Water pickup from surface               
+                           *            (mole water/mole wet pollutant)         
+   INICONC =  1.0          * -          Dilution with ambient air. (mole wet    
+                           *            poll. plus pickup/mole total mixture)   
+                           *                                                    
+CONTROL                    *  --------> DATA BLOCK: CONTROL PARAMETERS          
+                           *                                                    
+   TLAST   =  500.0        * s          Maximum time                            
+   DTMAX   =  2.0          * s          Maximum time step (output/integration)  
+   PRTCODE =  1            *            Output print code (normally 1)          
+   RIMIN   =  10.0         * -          Final Richardson number (normally 10.0) 
