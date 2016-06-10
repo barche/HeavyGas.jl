@@ -22,9 +22,6 @@ immutable GasData
   "Molecular mass of dry pollutant (kg/kmol)"
   mdp::Float64
 
-  "Source strength (kg of dp/s)"
-  E::Float64
-
   δ600::Float64
 
   "Friction velocity (m/s)"
@@ -48,7 +45,7 @@ immutable GasData
   "Monin-Obukhov length (m)"
   λ::Float64
 
-  function GasData(uref, href, z0, Tg, mdp, E, class::StabilityClass)
+  function GasData(uref, href, z0, Tg, mdp, class::StabilityClass)
     @assert class == D
     # TODO: Only for class D for now
     δ600 = 0.08
@@ -64,18 +61,23 @@ immutable GasData
 
     ρa = P*ma/(R*Tg)
 
-    new(uref, href, z0, mdp, E, δ600, uτ, fit.param[end], 1+fit.param[end], ma, ρa, ma/ρa, λ)
+    new(uref, href, z0, mdp, δ600, uτ, fit.param[end], 1+fit.param[end], ma, ρa, ma/ρa, λ)
   end
 end
 
 ρ(d::GasData, z::Float64) = d.ρa*(1-d.uτ^2 / (κ^2*g*d.λ) * (log((z+d.z0)/d.z0) + 9.2*z/d.λ))
 
-function dispersion(dx::Float64, xend::Float64, Meff0::Float64, Beff0::Float64, d::GasData)
+function dispersion(dx::Float64, xend::Float64, Beff0::Float64, d::GasData; E0 = 0., ypol0 = 0., H0 = 0., u0 = 0.)
   const ut = d.uτ
   const CE = 1.15
   const tav = 600 # Averaging time
   const δ = d.δ600*(tav/600)
   const γ = 0.0001
+
+  const ca0 = d.mdp*ypol0/d.Vm
+  const Sz0 = H0 / (1/d.β*gamma(1/d.β))
+  const E = E0 != 0 ? E0 : (2*d.uref*gamma((1+d.α)/d.β) / (d.β*d.href^d.α) * ca0 * Beff0) * Sz0^(1+d.α)
+  const Meff0 = (E / d.mdp) / (ypol0 == 0 ? 1 : ypol0)
 
   xrange = dx:dx:xend
 
@@ -84,6 +86,7 @@ function dispersion(dx::Float64, xend::Float64, Meff0::Float64, Beff0::Float64, 
   Sy_arr = Vector{Float64}(length(xrange)+1)
   b_arr = Vector{Float64}(length(xrange)+1)
   Heff_arr = Vector{Float64}(length(xrange)+1)
+  ueff_arr = Vector{Float64}(length(xrange)+1)
 
   Meff_arr[1] = Meff0
   Beff_arr[1] = Beff0
@@ -100,13 +103,14 @@ function dispersion(dx::Float64, xend::Float64, Meff0::Float64, Beff0::Float64, 
     Meff = Meff_arr[i]
     Beff = Beff_arr[i]
     Sy = Sy_arr[i]
-    ypol = d.E/(d.mdp*Meff) # polutant molar fraction
+    ypol = E/(d.mdp*Meff) # polutant molar fraction
     ca = d.mdp*ypol/d.Vm
     ρm = ca + (1-ypol)*d.ma / d.Vm
-    Sz = (d.E / (2*d.uref*gamma((1+d.α)/d.β) / (d.β*d.href^d.α) * ca * Beff))^(1/(1+d.α))
+    Sz = (E / (2*d.uref*gamma((1+d.α)/d.β) / (d.β*d.href^d.α) * ca * Beff))^(1/(1+d.α))
     Heff = 1/d.β*gamma(1/d.β)*Sz
     Heff_arr[i] = Heff
     ueff = gamma((1+d.α)/d.β)/gamma(1/d.β)*d.uref*(Sz/d.href)^d.α
+    ueff_arr[i] = ueff
     ρh = ρ(d, Heff)
     Ris = g*Heff/ut^2*((ρm - ρh)/d.ρa)
     Ri = g*Heff/d.uτ^2*(1-d.ρa/ρm)
@@ -154,14 +158,14 @@ function dispersion(dx::Float64, xend::Float64, Meff0::Float64, Beff0::Float64, 
   end
 
   Heff_arr[end] = Heff_arr[end-1]
+  ueff_arr[end] = ueff_arr[end-1]
 
-  return 0.:dx:xend, Meff_arr, Beff_arr, Sy_arr, d.E./(d.mdp*Meff_arr), b_arr, Heff_arr
+  return 0.:dx:xend, Meff_arr, Beff_arr, Sy_arr, E./(d.mdp*Meff_arr), b_arr, Heff_arr, ueff_arr
 end
 
 function instantaneous(r0::Number, h0::Number, c0::Number, dt::Float64, d::GasData)
   r::Float64 = r0
   h::Float64 = h0
-  c::Float64 = c0
   V = π*r^2*h
   t = 0.
   ub = 0.
@@ -182,12 +186,9 @@ function instantaneous(r0::Number, h0::Number, c0::Number, dt::Float64, d::GasDa
   @show const delay_t = ts / sqrt((g*(ρ(V)-d.ρa)/d.ρa) / V^(1/3))
 
   Ris_i = 100.
-  while Ris_i > 10.# && t < 2.8
+  while Ris_i > 10
     m = ρ(V)*V
     mv = ub*m
-    if t % 0.1 < dt
-      println("t: ", round(t,2), " r: ", r, " h: ", h, " ρm/ρa: ", ρ(V)/d.ρa, " c: ", c, " Ris_i: ", Ris_i, " x: ", x)
-    end
     gp = g*(ρ(V) - d.ρa)/d.ρa
     uf = 1.15*sqrt(gp*h)
     r += dt * uf
@@ -208,9 +209,15 @@ function instantaneous(r0::Number, h0::Number, c0::Number, dt::Float64, d::GasDa
     t += dt
     x += ub*dt
   end
-  println("uτ: $(d.uτ)")
+  return t, x, r, h, Mdp*d.Vm / V, ub
 end
 
-export GasData, dispersion, instantaneous
+function observer_position(xs::Float64, t::Float64, Rm::Float64, Heff::Float64, d::GasData)
+  const Sz = d.β/gamma(1/d.β)*Heff
+  const C0 = d.uref*gamma((1+d.α)/d.β)/gamma(1/d.β) * (Sz/d.href)^d.α * ((0.5*π*Rm + Rm)/d.href)^(-d.α/(1+d.α))
+  return xs + d.href*(C0/(d.href*(1+d.α))*(t))^(1+d.α)
+end
+
+export GasData, dispersion, instantaneous, observer_position
 
 end # module

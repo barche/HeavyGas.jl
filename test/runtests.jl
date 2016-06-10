@@ -2,8 +2,8 @@ using HeavyGas
 using Plots
 
 
-m = GasData(3, 10, 0.03, 15+273.15, 40.53, 32, HeavyGas.D)
-x, Meff, Beff, Sy, ypol, b, Heff = dispersion(0.1, 640., m.E/m.mdp, 2.5, m)
+m = GasData(3, 10, 0.03, 15+273.15, 40.53, HeavyGas.D)
+x, Meff, Beff, Sy, ypol, b, Heff, ueff = dispersion(0.1, 640., 2.5, m, E0 = 32.)
 
 @show m.ρa
 
