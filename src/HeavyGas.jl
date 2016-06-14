@@ -289,7 +289,7 @@ function instantaneous(r0::Number, h0::Number, c0::Number, dt::Float64, output_t
       x_corr[i] = x_corr[i-1] - (x_orig[i-1] - x_orig[i])*(Lcs + Ss[i])/Lcs
     end
 
-    println("corrected cloud:")
+    println("corrected cloud length: ", x_corr[end]-x_corr[1])
 
     for (i,xs) in enumerate(od.xstart)
       x = x_corr[i]
