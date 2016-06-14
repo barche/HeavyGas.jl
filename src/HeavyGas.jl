@@ -1,5 +1,6 @@
 module HeavyGas
 
+using Interpolations
 using LsqFit
 
 # Pasquill stability classes
@@ -93,8 +94,6 @@ function dispersion(dx::Float64, xend::Float64, Beff0::Float64, d::GasData; E0 =
   Sy_arr[1] = 0
   b_arr[1] = Beff0
 
-  println("Running with α = $(d.α)")
-
   gaussian = false
   gravity_collapsed = false
   xv = 0.
@@ -163,7 +162,8 @@ function dispersion(dx::Float64, xend::Float64, Beff0::Float64, d::GasData; E0 =
   return 0.:dx:xend, Meff_arr, Beff_arr, Sy_arr, E./(d.mdp*Meff_arr), b_arr, Heff_arr, ueff_arr
 end
 
-function instantaneous(r0::Number, h0::Number, c0::Number, dt::Float64, d::GasData)
+# Compute initial gravitational spread using a box model (Hegabox)
+function boxmodel(r0::Number, h0::Number, c0::Number, dt::Float64, d::GasData)
   r::Float64 = r0
   h::Float64 = h0
   V = π*r^2*h
@@ -183,7 +183,7 @@ function instantaneous(r0::Number, h0::Number, c0::Number, dt::Float64, d::GasDa
 
   Ris_i = 1e30
 
-  @show const delay_t = ts / sqrt((g*(ρ(V)-d.ρa)/d.ρa) / V^(1/3))
+  const delay_t = ts / sqrt((g*(ρ(V)-d.ρa)/d.ρa) / V^(1/3))
 
   Ris_i = 100.
   while Ris_i > 10
@@ -212,12 +212,94 @@ function instantaneous(r0::Number, h0::Number, c0::Number, dt::Float64, d::GasDa
   return t, x, r, h, Mdp*d.Vm / V, ub
 end
 
+function distribute_observers(x::Float64, r::Float64, n::Int)
+  const dx = r/1e6
+  return linspace(x-r+dx, x+r-dx, 2*n+1)
+end
+
+"Data linked to observers"
+type ObserverDataBase{InterpolationType}
+  xstart::AbstractArray{Float64,1}
+  vfrac::Vector{InterpolationType}
+  b::Vector{InterpolationType}
+  Beff::Vector{InterpolationType}
+
+  function ObserverDataBase(x::Float64, r::Float64, n::Int)
+    const xrange = distribute_observers(x,r,n)
+    const nx = length(xrange)
+    new(xrange, Vector{InterpolationType}(nx), Vector{InterpolationType}(nx), Vector{InterpolationType}(nx))
+  end
+end
+
+typealias ObserverData ObserverDataBase{Interpolations.GriddedInterpolation{Float64,1,Float64,Interpolations.Gridded{Interpolations.Linear},Tuple{Array{Float64,1}},0}}
+
 function observer_position(xs::Float64, t::Float64, Rm::Float64, Heff::Float64, d::GasData)
   const Sz = d.β/gamma(1/d.β)*Heff
   const C0 = d.uref*gamma((1+d.α)/d.β)/gamma(1/d.β) * (Sz/d.href)^d.α * ((0.5*π*Rm + Rm)/d.href)^(-d.α/(1+d.α))
   return xs + d.href*(C0/(d.href*(1+d.α))*(t))^(1+d.α)
 end
 
-export GasData, dispersion, instantaneous, observer_position
+function correct_cloud_shape(observer_positions::Vector{Float64})
+  Lc = observer_positions[end] - observer_positions[1]
+end
+
+function instantaneous(r0::Number, h0::Number, c0::Number, dt::Float64, output_times::AbstractArray{Float64,1}, d::GasData, n_obs = 10, dx = 0.1)
+  t_box, x_box, r_box, h_box, vfrac_box, u_box = boxmodel(r0, h0, c0, dt, d)
+  od = ObserverData(x_box, r_box, n_obs)
+
+  const tmax = maximum(output_times)
+  xmax = 1.1*observer_position(od.xstart[end], tmax, r_box, h_box, d)
+
+  Beff0 = zeros(od.xstart)
+
+  for (i,x) in enumerate(od.xstart)
+    Beff0[i] = sqrt(r_box^2 - (x_box-x)^2)
+    x, Meff, Beff, Sy, ypol, b, Heff, ueff = dispersion(dx, xmax, Beff0[i], d, H0 = h_box, ypol0 = vfrac_box, u0 = u_box)
+    od.vfrac[i] = interpolate((x,), ypol, Gridded(Linear()))
+    od.b[i] = interpolate((x,), b, Gridded(Linear()))
+    od.Beff[i] = interpolate((x,), Beff, Gridded(Linear()))
+  end
+
+  const Lc = od.xstart[end] - od.xstart[1]
+  const Lcs = Lc / r_box
+  Wc = zeros(od.xstart)
+  Ss = zeros(od.xstart)
+  Beff_c = zeros(od.xstart)
+  x_corr = zeros(od.xstart)
+
+  for t in output_times
+    x_orig = Float64[observer_position(xs, t-t_box, r_box, h_box, d) for xs in od.xstart]
+    println("\n t = $(t)\n")
+    for (i,xs) in enumerate(od.xstart)
+      x = x_orig[i]
+      const xo = x - xs
+      Wc[i] = od.b[i][xo] > 0 ? od.Beff[i][xo] / Beff0[i] : 1.
+      Ss[i] = -0.5*(1+Lcs) + 0.5*sqrt((1+Lcs)^2 + 4*Lcs*(Wc[i]-1))
+      Beff_c[i] = od.Beff[i][xo] * (1+Ss[i]) / Wc[i]
+      println(round(x), " ", round(100*od.vfrac[i][xo],2), " ", od.b[i][xo], " ", od.Beff[i][xo])
+    end
+
+    const xend = endof(od.xstart)
+    const xmid = endof(od.xstart)÷2+1
+    x_corr[xmid] = x_orig[xmid]
+    for i in xmid-1:-1:1
+      x_corr[i] = x_corr[i+1] + (x_orig[i] - x_orig[i+1])*(Lcs + Ss[i])/Lcs
+    end
+    for i in xmid+1:xend
+      x_corr[i] = x_corr[i-1] - (x_orig[i-1] - x_orig[i])*(Lcs + Ss[i])/Lcs
+    end
+
+    println("corrected cloud:")
+
+    for (i,xs) in enumerate(od.xstart)
+      x = x_corr[i]
+      const xo = x - xs
+      println(round(x), " ", round(100*od.vfrac[i][xo],2), " ", od.b[i][xo], " ", od.Beff[i][xo], " ", Beff_c[i])
+    end
+
+  end
+end
+
+export GasData, dispersion, boxmodel, ObserverData, instantaneous
 
 end # module
