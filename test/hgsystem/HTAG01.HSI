@@ -1,54 +1,54 @@
 * ==============  HEGADAS-S standard input file STPOOLNO.HSI  ==================
-*            (case: run started at pool, normal thermodynamics)
-
-TITLE   Title of Analysis
-
-CONTROL                    *  --------> DATA BLOCK: CONTROL PARAMETERS
-                           *
+*            (case: run started at pool, normal thermodynamics)                 
+                                                                                
+TITLE   Title of Analysis                                                       
+                                                                                
+CONTROL                    *  --------> DATA BLOCK: CONTROL PARAMETERS          
+                           *                                                    
     ICNT   =      0        *            output code (isocontours,cloud contents)
-    ISURF  =      2        *            code for surface heat/water transfer
-                           *
-AMBIENT                    *  --------> DATA BLOCK: AMBIENT CONDITIONS
-                           *
-   AIRTEMP =  15.          * C          air temperature at height z = ZAIRTEMP
-   ZAIRTEMP=   0.          * M          height at which AIRTEMP is given
-   RHPERC  =  0.          * %          relative humidity                       
-   U0      =  3.0          * M/S        wind speed at height z = Z0
-   Z0      =  10.0         * M          height at which U0 is given
-   TGROUND =  15.          * C          earth's surface temperature
-                           *
-DISP                       *  --------> DATA BLOCK: DISPERSION DATA
-                           *
-   ZR      =  0.03         * M          surface roughness parameter
-   PQSTAB  =  D            *            Pasquill stability class
-   AVTIMC  =  600.         * S          averaging time for concentration
+    ISURF  =      2        *            code for surface heat/water transfer    
+                           *                                                    
+AMBIENT                    *  --------> DATA BLOCK: AMBIENT CONDITIONS          
+                           *                                                    
+   AIRTEMP =  15.          * C          air temperature at height z = ZAIRTEMP  
+   ZAIRTEMP=   0.          * M          height at which AIRTEMP is given        
+   RHPERC  =  0.          * %          relative humidity                        
+   U0      =  3.0          * M/S        wind speed at height z = Z0             
+   Z0      =  10.0         * M          height at which U0 is given             
+   TGROUND =  15.          * C          earth's surface temperature             
+                           *                                                    
+DISP                       *  --------> DATA BLOCK: DISPERSION DATA             
+                           *                                                    
+   ZR      =  0.03         * M          surface roughness parameter             
+   PQSTAB  =  D            *            Pasquill stability class                
+   AVTIMC  =  600.         * S          averaging time for concentration        
    CROSSW  =  2            *            <sigma-y>formula (don't normally change)
-                           *
-GASDATA                    *  ---------> DATA BLOCK: POLLUTANT DATA
+                           *                                                    
+GASDATA                    *  ---------> DATA BLOCK: POLLUTANT DATA             
                            *             [pollutant = basic gas,extra gas,water;
-                           *             water consists of vapour,liquid at
-                           *             TEMPGAS and liquid pick-up at TGROUND]
-   EXGASPOL=   0.          * -          extra gas in pollutant (molar fraction)
+                           *             water consists of vapour,liquid at     
+                           *             TEMPGAS and liquid pick-up at TGROUND] 
+   EXGASPOL=   0.          * -          extra gas in pollutant (molar fraction) 
    WATERPOL=   0.          * -          total water in pollutant(molar fraction)
-   GASFLOW =  32.          * KG/S       emission rate of dry pollutant
-   CPGAS   =  68.0         * J/MOLE/C   specific heat of dry pollutant
-   MWGAS   =  40.53         * KG/KMOLE   molecular weight of dry pollutant
+   GASFLOW =  1.          * KG/S       emission rate of dry pollutant           
+   CPGAS   =  68.0         * J/MOLE/C   specific heat of dry pollutant          
+   MWGAS   =  40.53         * KG/KMOLE   molecular weight of dry pollutant      
    HEATGR  =  29.          * .....      heat group for natural-conv. (dry poll.)
-   TEMPGAS =  15.          * C          pollutant temperature
+   TEMPGAS =  15.          * C          pollutant temperature                   
    WPICKUP =   0.          * -          water liquid pickup (mole/mole of poll.)
-                           *
-CLOUD                      *  --------> DATA BLOCK: CLOUD OUTPUT CONTROL
-                           *
-   DXFIX   =  0.1          * M          fixed-size output step length
-   NFIX    =  640.          *            fixed steps upto distance x = NFIX*DXFI
-   XEND    =  640.         * M          x at which calculations are stopped
-   CAMIN   =  1E-7         * KG/M3      CA (conc.) at which calcs. are stopped
-   CU      =  5.           * KG/M3      upper concentration limit
-   CL      =  1E-7         * KG/M3      lower concentration limit
-                           *
-TRANSIT                    *  --------> DATA BLOCK: BREAKPOINT DATA [see NOTE]
-                           *
-   DISTS   =  2.5          * M          downwind x-coordinate at breakpoint
-   WS      =  -2.5        * M          cloud half-width (negative flag)
-   CONCS   =  1.        * -          ground-level molar wet-gas fraction
-   HS      = 0.
+                           *                                                    
+CLOUD                      *  --------> DATA BLOCK: CLOUD OUTPUT CONTROL        
+                           *                                                    
+   DXFIX   =  0.1          * M          fixed-size output step length           
+   NFIX    =  500.          *            fixed steps upto distance x = NFIX*DXF 
+   XEND    =  500.         * M          x at which calculations are stopped     
+   CAMIN   =  1E-7         * KG/M3      CA (conc.) at which calcs. are stopped  
+   CU      =  5.           * KG/M3      upper concentration limit               
+   CL      =  1E-7         * KG/M3      lower concentration limit               
+                           *                                                    
+TRANSIT                    *  --------> DATA BLOCK: BREAKPOINT DATA [see NOTE]  
+                           *                                                    
+   DISTS   =  2.5          * M          downwind x-coordinate at breakpoint     
+   WS      =  -2.5        * M          cloud half-width (negative flag)         
+   CONCS   =  1.        * -          ground-level molar wet-gas fraction        
+   HS      = 0.                                                                 

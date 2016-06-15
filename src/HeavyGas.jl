@@ -129,7 +129,7 @@ function dispersion(dx::Float64, xend::Float64, Beff0::Float64, d::GasData; E0 =
       gravity_collapsed = true
     end
 
-    b_arr[i+1] = b
+    b_arr[i] = b
     if gravity_collapsed
       Meff_arr[i+1] = Meff/(2*Beff) + dx*(ue/V0)
     else
@@ -158,6 +158,7 @@ function dispersion(dx::Float64, xend::Float64, Beff0::Float64, d::GasData; E0 =
 
   Heff_arr[end] = Heff_arr[end-1]
   ueff_arr[end] = ueff_arr[end-1]
+  b_arr[end] = b_arr[end-1]
 
   return 0.:dx:xend, Meff_arr, Beff_arr, Sy_arr, E./(d.mdp*Meff_arr), b_arr, Heff_arr, ueff_arr
 end
@@ -265,39 +266,37 @@ function instantaneous(r0::Number, h0::Number, c0::Number, dt::Float64, output_t
   Wc = zeros(od.xstart)
   Ss = zeros(od.xstart)
   Beff_c = zeros(od.xstart)
-  x_corr = zeros(od.xstart)
 
-  for t in output_times
+  x_out = zeros(length(output_times), length(od.xstart))
+  vfrac_out = zeros(x_out)
+
+  for (it,t) in enumerate(output_times)
     x_orig = Float64[observer_position(xs, t-t_box, r_box, h_box, d) for xs in od.xstart]
-    println("\n t = $(t)\n")
     for (i,xs) in enumerate(od.xstart)
       x = x_orig[i]
       const xo = x - xs
       Wc[i] = od.b[i][xo] > 0 ? od.Beff[i][xo] / Beff0[i] : 1.
       Ss[i] = -0.5*(1+Lcs) + 0.5*sqrt((1+Lcs)^2 + 4*Lcs*(Wc[i]-1))
       Beff_c[i] = od.Beff[i][xo] * (1+Ss[i]) / Wc[i]
-      println(round(x), " ", round(100*od.vfrac[i][xo],2), " ", od.b[i][xo], " ", od.Beff[i][xo])
     end
 
     const xend = endof(od.xstart)
     const xmid = endof(od.xstart)÷2+1
-    x_corr[xmid] = x_orig[xmid]
+    x_out[it,xmid] = x_orig[xmid]
     for i in xmid-1:-1:1
-      x_corr[i] = x_corr[i+1] + (x_orig[i] - x_orig[i+1])*(Lcs + Ss[i])/Lcs
+      x_out[it,i] = x_out[it,i+1] + (x_orig[i] - x_orig[i+1])*(Lcs + Ss[i])/Lcs
     end
     for i in xmid+1:xend
-      x_corr[i] = x_corr[i-1] - (x_orig[i-1] - x_orig[i])*(Lcs + Ss[i])/Lcs
+      x_out[it,i] = x_out[it,i-1] - (x_orig[i-1] - x_orig[i])*(Lcs + Ss[i])/Lcs
     end
-
-    println("corrected cloud length: ", x_corr[end]-x_corr[1])
 
     for (i,xs) in enumerate(od.xstart)
-      x = x_corr[i]
+      x = x_out[it,i]
       const xo = x - xs
-      println(round(x), " ", round(100*od.vfrac[i][xo],2), " ", od.b[i][xo], " ", od.Beff[i][xo], " ", Beff_c[i])
+      vfrac_out[it, i] = od.vfrac[i][xo]
     end
-
   end
+  return x_out, vfrac_out
 end
 
 export GasData, dispersion, boxmodel, ObserverData, instantaneous

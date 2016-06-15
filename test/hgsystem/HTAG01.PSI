@@ -1,96 +1,66 @@
 * ==============  PSMAIN standard input file STBRKHF ===========================
-
-TITLE   Skeleton input file (without error-function correction)
-
-* Note 1: Error-function correction for finite-duration releases may
-*         be applied to steady-state concentrations
-* Note 2: Horizontal and vertical axis parameter types:
-*  code = 1: downwind distance X to pool, m
-*       = 2: %vol. (dry) gas fraction CAV at y=z=0
-*       = 3: vertical dispersion coefficient SZ, m
-*       = 4: crosswind dispersion coefficient SY, m
-*       = 5: half-width b of middle part of crosswind conc. profile, m
-*       = 6: temperature TMP, Celsius
-*       = 7: effective cloud half-width Beff, m
-*       = 8: effective cloud height Heff, m
-*       = 9: cloud half-width (normal definition), m
-
-GRAPH2                     * GRAPH RELATING TWO TYPES OF DATA
-
-  OUT2    = HTAG01.PS1
-                         * filename of output file
-  XRANGE2 =    0.0        * minimum value for x
-             640.0        * maximum value for x (> minimum)
-               0.1        * step size     for x (> 0)
-  HORAX2  =      1        * horizontal axis parameter type (1 to 9)
-  VERAX2  =      2        * vertical   axis parameter type (1 to 9)
-
-GRAPH2                     * GRAPH RELATING TWO TYPES OF DATA
-
-  OUT2    = HTAG01.PS2
-                          * filename of output file
-  XRANGE2 =    0.0        * minimum value for x
-             640.0        * maximum value for x (> minimum)
-               0.1        * step size     for x (> 0)
-  HORAX2  =      1        * horizontal axis parameter type (1 to 9)
-  VERAX2  =      4        * vertical   axis parameter type (1 to 9)
-
-GRAPH2                     * GRAPH RELATING TWO TYPES OF DATA
-
-  OUT2    = HTAG01.PS3
-                          * filename of output file
-  XRANGE2 =    0.0        * minimum value for x
-             640.0        * maximum value for x (> minimum)
-               0.1        * step size     for x (> 0)
-  HORAX2  =      1        * horizontal axis parameter type (1 to 9)
-  VERAX2  =      7        * vertical   axis parameter type (1 to 9)
-
-GRAPH2                     * GRAPH RELATING TWO TYPES OF DATA
-
-  OUT2    = HTAG01.PS4
-                          * filename of output file
-  XRANGE2 =    0.0        * minimum value for x
-             640.0        * maximum value for x (> minimum)
-               0.1        * step size     for x (> 0)
-  HORAX2  =      1        * horizontal axis parameter type (1 to 9)
-  VERAX2  =      3        * vertical   axis parameter type (1 to 9)
-
-GRAPH2                     * GRAPH RELATING TWO TYPES OF DATA
-
-  OUT2    = HTAG01.PS5
-                          * filename of output file
-  XRANGE2 =    0.0        * minimum value for x
-             640.0        * maximum value for x (> minimum)
-               0.1        * step size     for x (> 0)
-  HORAX2  =      1        * horizontal axis parameter type (1 to 9)
-  VERAX2  =      4        * vertical   axis parameter type (1 to 9)
-
-GRAPH2                     * GRAPH RELATING TWO TYPES OF DATA
-
-  OUT2    = HTAG01.PS6
-                          * filename of output file
-  XRANGE2 =    0.0        * minimum value for x
-             640.0        * maximum value for x (> minimum)
-               0.1        * step size     for x (> 0)
-  HORAX2  =      1        * horizontal axis parameter type (1 to 9)
-  VERAX2  =      5        * vertical   axis parameter type (1 to 9)
-
-GRAPH2                     * GRAPH RELATING TWO TYPES OF DATA
-
-  OUT2    = HTAG01.PS7
-                          * filename of output file
-  XRANGE2 =    0.0        * minimum value for x
-             640.0        * maximum value for x (> minimum)
-               0.1        * step size     for x (> 0)
-  HORAX2  =      1        * horizontal axis parameter type (1 to 9)
-  VERAX2  =      6        * vertical   axis parameter type (1 to 9)
-
-GRAPH2                     * GRAPH RELATING TWO TYPES OF DATA
-
-  OUT2    = HTAG01.PS8
-                          * filename of output file
-  XRANGE2 =    0.0        * minimum value for x
-             640.0        * maximum value for x (> minimum)
-               0.1        * step size     for x (> 0)
-  HORAX2  =      1        * horizontal axis parameter type (1 to 9)
-  VERAX2  =      8        * vertical   axis parameter type (1 to 9)
+                                                                                
+TITLE   Skeleton input file (without error-function correction)                 
+                                                                                
+* Note 1: Error-function correction for finite-duration releases may            
+*         be applied to steady-state concentrations                             
+* Note 2: Horizontal and vertical axis parameter types:                         
+*  code = 1: downwind distance X to pool, m                                     
+*       = 2: %vol. (dry) gas fraction CAV at y=z=0                              
+*       = 3: vertical dispersion coefficient SZ, m                              
+*       = 4: crosswind dispersion coefficient SY, m                             
+*       = 5: half-width b of middle part of crosswind conc. profile, m          
+*       = 6: temperature TMP, Celsius                                           
+*       = 7: effective cloud half-width Beff, m                                 
+*       = 8: effective cloud height Heff, m                                     
+*       = 9: cloud half-width (normal definition), m                            
+                                                                                
+GRAPH2                     * GRAPH RELATING TWO TYPES OF DATA                   
+                                                                                
+  OUT2    = HTAG01.PS1                                                          
+                         * filename of output file                              
+  XRANGE2 =    0.0        * minimum value for x                                 
+             500.        * maximum value for x (> minimum)                      
+               0.1        * step size     for x (> 0)                           
+  HORAX2  =      1        * horizontal axis parameter type (1 to 9)             
+  VERAX2  =      2        * vertical   axis parameter type (1 to 9)             
+                                                                                
+GRAPH2                     * GRAPH RELATING TWO TYPES OF DATA                   
+                                                                                
+  OUT2    = HTAG01.PS2                                                          
+                          * filename of output file                             
+  XRANGE2 =    0.0        * minimum value for x                                 
+             500.        * maximum value for x (> minimum)                      
+               0.1        * step size     for x (> 0)                           
+  HORAX2  =      1        * horizontal axis parameter type (1 to 9)             
+  VERAX2  =      4        * vertical   axis parameter type (1 to 9)             
+                                                                                
+GRAPH2                     * GRAPH RELATING TWO TYPES OF DATA                   
+                                                                                
+  OUT2    = HTAG01.PS3                                                          
+                          * filename of output file                             
+  XRANGE2 =    0.0        * minimum value for x                                 
+             500.        * maximum value for x (> minimum)                      
+               0.1        * step size     for x (> 0)                           
+  HORAX2  =      1        * horizontal axis parameter type (1 to 9)             
+  VERAX2  =      7        * vertical   axis parameter type (1 to 9)             
+                                                                                
+GRAPH2                     * GRAPH RELATING TWO TYPES OF DATA                   
+                                                                                
+  OUT2    = HTAG01.PS4                                                          
+                          * filename of output file                             
+  XRANGE2 =    0.0        * minimum value for x                                 
+             500.        * maximum value for x (> minimum)                      
+               0.1        * step size     for x (> 0)                           
+  HORAX2  =      1        * horizontal axis parameter type (1 to 9)             
+  VERAX2  =      3        * vertical   axis parameter type (1 to 9)             
+                                                                                
+GRAPH2                     * GRAPH RELATING TWO TYPES OF DATA                   
+                                                                                
+  OUT2    = HTAG01.PS5                                                          
+                          * filename of output file                             
+  XRANGE2 =    0.0        * minimum value for x                                 
+             500.        * maximum value for x (> minimum)                      
+               0.1        * step size     for x (> 0)                           
+  HORAX2  =      1        * horizontal axis parameter type (1 to 9)             
+  VERAX2  =      4        * vertical   axis parameter type (1 to 9)             
